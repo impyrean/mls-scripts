@@ -1,9 +1,9 @@
 // ----- consts ----- //
 
-const SIGNATURE_TEXT_FOR_STARTER_TABLE = 'Single-Family Homes Client Detail Report';
+const SIGNATURE_TEXT_FOR_STARTER_TABLE = 'Condo/Coop/TIC/Loft Client Detail Report';
 const SIGNATURE_TEXT_FOR_HEADER_TABLE = 'MLS#';
 const SIGNATURE_TEXT_FOR_SELL_TABLE = 'Pending Date';
-const SIGNATURE_TEXT_FOR_DETAILS_TABLE = 'Single-Family Homes';
+const SIGNATURE_TEXT_FOR_DETAILS_TABLE = 'Type:';
 
 
 // ----- top-level functions ----- //
@@ -24,17 +24,18 @@ const domToCsv = tablesForAHome => {
 	const headerTable = findHeaderTable(tablesForAHome);
 	const sellTable = findSellTable(tablesForAHome);
 	const detailsTable = findDetailsTable(tablesForAHome);
+	const textDetailsTable = findTextDetailsTable(detailsTable);
 
 	const address = getAddress(headerTable);
-	const type = 'Single family';
 	const listingPrice = getListingPrice(headerTable);
 	const sellingPrice = getSellingPrice(sellTable);
 	const daysOnMarket = getDaysOnMarket(sellTable);
-	const numBeds = getNumBeds(detailsTable);
-	const numBaths = getNumBaths(detailsTable);
-	const numParkingSpots = getNumParkingSpots(detailsTable);
+	const numBeds = getNumBeds(textDetailsTable);
+	const numBaths = getNumBaths(textDetailsTable);
+	const numParkingSpots = getNumParkingSpots(textDetailsTable);
+	const hoaDues = getHOADues(textDetailsTable);
 
-	return `${address}	${type}	${listingPrice}	${sellingPrice}	${daysOnMarket}	${numBeds}	${numBaths}	${numParkingSpots}`;
+	return `${address}	${listingPrice}	${sellingPrice}	${daysOnMarket}	${numBeds}	${numBaths}	${numParkingSpots}	${hoaDues}`;
 };
 
 
@@ -46,6 +47,7 @@ const findSellTable = tablesForAHome => tablesForAHome.find(t => [...t.querySele
 
 const findDetailsTable = tablesForAHome => tablesForAHome.find(t => [...t.querySelectorAll('td b')].some(b => b.innerText.trim().startsWith(SIGNATURE_TEXT_FOR_DETAILS_TABLE)));
 
+const findTextDetailsTable = detailsTable => detailsTable.querySelectorAll('td')[3];
 
 // ----- get* ----- //
 
@@ -60,11 +62,13 @@ const getSellingPrice = sellTable => sellTable.querySelectorAll('td b')[5].inner
 
 const getDaysOnMarket = sellTable => sellTable.querySelectorAll('td b')[7].innerText.trim();
 
-const getNumBeds = detailsTable => detailsTable.querySelectorAll('table table table')[3].querySelectorAll('td')[1].innerText.trim();
+const getNumBeds = textDetailsTable => textDetailsTable.querySelectorAll('table')[3].querySelectorAll('td')[1].innerText.trim();
 
-const getNumBaths = detailsTable => detailsTable.querySelectorAll('table table table')[3].querySelectorAll('td')[3].innerText.trim();
+const getNumBaths = textDetailsTable => textDetailsTable.querySelectorAll('table')[3].querySelectorAll('td')[3].innerText.trim();
 
-const getNumParkingSpots = detailsTable => detailsTable.querySelectorAll('table table table')[3].querySelectorAll('td')[5].innerText.trim();
+const getNumParkingSpots = textDetailsTable => textDetailsTable.querySelectorAll('table')[3].querySelectorAll('td')[5].innerText.trim();
+
+const getHOADues = textDetailsTable => textDetailsTable.querySelectorAll('table')[6].querySelectorAll('td')[3].innerText.trim();
 
 
 // ----- Main ----- //
@@ -72,6 +76,6 @@ const getNumParkingSpots = detailsTable => detailsTable.querySelectorAll('table 
 const starterTables = findAllTablesSignifyingStartOfAHome();
 const tablesByHome = starterTables.map(groupTablesByHome);
 const csvs = tablesByHome.map(domToCsv);
-const header = 'Address 	Type 	Listing Price 	Selling Price 	Days on Market 	Beds 	Baths 	Parking Spots';
+const header = 'Address  	Listing Price 	Selling Price 	Days on market 	Beds 	Baths 	Parking spots 	HOA';
 csvs.unshift(header);
 console.log(csvs.join('\n'));
